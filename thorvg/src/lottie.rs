@@ -381,6 +381,36 @@ impl LottieAnimation<'_> {
         })
     }
 
+    /// Starts a dynamic tween from the current frame toward frame `to`;
+    /// advance it with [`tween_go`](Self::tween_go).
+    ///
+    /// The tween is discarded by [`set_frame`](Animation::set_frame) or
+    /// [`tween`](Self::tween).
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::InsufficientCondition`] if no animation is loaded.
+    /// - [`Error::NotSupported`] if Lottie support is not compiled in.
+    pub fn tween_to(&mut self, to: f32) -> Result<()> {
+        Error::from_raw(unsafe { sys::tvg_lottie_animation_tween_to(self.inner.raw(), to) })
+    }
+
+    /// Advances the tween started by [`tween_to`](Self::tween_to) to
+    /// `progress`, from `0.0` (start) to `1.0` (target frame).
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::InsufficientCondition`] if no animation is loaded or
+    ///   [`tween_to`](Self::tween_to) has not been called.
+    /// - [`Error::NotSupported`] if Lottie support is not compiled in.
+    pub fn tween_go(&mut self, progress: f32) -> Result<()> {
+        Error::from_raw(unsafe { sys::tvg_lottie_animation_tween_go(self.inner.raw(), progress) })
+    }
+
     // ── Quality ────────────────────────────────────────────────────
 
     /// Sets the rendering quality for Lottie effects (blur, shadows, …).

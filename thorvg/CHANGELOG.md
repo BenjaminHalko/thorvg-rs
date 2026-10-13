@@ -40,6 +40,12 @@ that also uses `thorvg-sys` directly.
   through `AudioInfo::volume`.
 - **`LottieAnimation::expressions_supported`** — whether the linked
   engine evaluates Lottie expressions.
+- **`LottieAnimation::tween_to`** / **`LottieAnimation::tween_go`** —
+  dynamic tweening from the current frame toward a target (added
+  upstream in ThorVG 1.1.0, previously unwrapped).
+- **`Paint::intersects_region`** — hit-test variant that can exclude
+  hidden paints (added upstream in ThorVG 1.1.0, previously
+  unwrapped).
 - **`Error::SystemError`** — maps the new `TVG_RESULT_SYSTEM_ERROR`
   (`Error` is `#[non_exhaustive]`, so this is additive).
 

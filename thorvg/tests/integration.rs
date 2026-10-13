@@ -1579,3 +1579,30 @@ fn test_picture_load_error_codes() {
     assert_eq!(pic.load_from_str("/nonexistent/x.png"), Err(Error::InvalidArguments));
     assert_eq!(pic.load_from_str("/nonexistent/x.xyz"), Err(Error::InvalidArguments));
 }
+
+// ── Hit-testing & dynamic tweening ─────────────────────────────────
+
+#[test]
+fn test_paint_intersects_region_requires_update() {
+    // Hit-testing needs the paint updated on a canvas; a fresh shape
+    // misses in both modes.
+    let engine = Thorvg::init(0).unwrap();
+    let mut shape = engine.shape().unwrap();
+    shape.append_rect(Rect::new(0.0, 0.0, 32.0, 32.0)).unwrap();
+    assert!(!shape.intersects_region(8, 8, 1, 1, false));
+    assert!(!shape.intersects_region(8, 8, 1, 1, true));
+}
+
+#[test]
+fn test_lottie_tween_to_and_go() {
+    let engine = Thorvg::init(0).unwrap();
+    let mut lottie = engine.lottie_animation().unwrap();
+    assert_eq!(lottie.tween_to(1.0), Err(Error::InsufficientCondition));
+
+    lottie.load_data(LOTTIE_AUDIO_JSON).unwrap();
+    // `tween_go` needs a target from `tween_to` first.
+    assert_eq!(lottie.tween_go(0.5), Err(Error::InsufficientCondition));
+    lottie.tween_to(60.0).unwrap();
+    lottie.tween_go(0.5).unwrap();
+    lottie.tween_go(1.0).unwrap();
+}
