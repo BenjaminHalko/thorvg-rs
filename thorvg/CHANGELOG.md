@@ -47,9 +47,16 @@ that also uses `thorvg-sys` directly.
 
 - **`thorvg-sys` dependency `0.3.1` → `0.4.0`** (now bundles ThorVG
   1.1.2).
-- Picture loading reports more specific errors: ThorVG now preserves
-  each loader's result instead of collapsing failures (e.g.
-  `Error::NotSupported` when the matching loader is not compiled in).
+- **Picture loading reports each loader's own result** (ThorVG
+  preserves it instead of collapsing failures). Behavioural change for
+  callers matching on errors: malformed data passed to
+  `Picture::load_data` now returns `Error::InvalidArguments` (was
+  `Error::NotSupported`), and a path with a recognised extension whose
+  loader is not compiled in now returns `Error::NotSupported` (was
+  `Error::InvalidArguments`). The `# Errors` docs of `Picture::load*`
+  and `Thorvg::load_font_from_str` are updated to match.
+- `Shape::cubic_to` documents upstream's new warning: rendering is not
+  guaranteed when it is the first path command.
 
 ### Fixed
 

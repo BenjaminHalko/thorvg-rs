@@ -1563,3 +1563,19 @@ fn test_video_load_and_render_first_frame() {
     video.pause().unwrap();
     video.stop().unwrap();
 }
+
+// ── Loader error contract ──────────────────────────────────────────
+
+#[test]
+fn test_picture_load_error_codes() {
+    // ThorVG 1.1.2 preserves each loader's result: malformed input is
+    // `InvalidArguments`, a recognised format whose loader is not
+    // compiled in (JPEG never is) is `NotSupported`.
+    let engine = Thorvg::init(0).unwrap();
+    let mut pic = engine.picture().unwrap();
+    assert_eq!(pic.load_data(b"garbage!", MimeType::Png, None), Err(Error::InvalidArguments));
+    assert_eq!(pic.load_data(b"garbage!", MimeType::Jpg, None), Err(Error::NotSupported));
+    assert_eq!(pic.load_from_str("/nonexistent/x.jpg"), Err(Error::NotSupported));
+    assert_eq!(pic.load_from_str("/nonexistent/x.png"), Err(Error::InvalidArguments));
+    assert_eq!(pic.load_from_str("/nonexistent/x.xyz"), Err(Error::InvalidArguments));
+}

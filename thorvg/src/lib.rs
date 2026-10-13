@@ -435,10 +435,11 @@ impl Thorvg {
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArguments`] if `path` is empty, invalid, or
-    ///   contains an interior NUL byte.
-    /// - [`Error::NotSupported`] if the file extension is not a
-    ///   recognized font format.
+    /// - [`Error::InvalidArguments`] if `path` is empty, contains an
+    ///   interior NUL byte, has an unrecognised extension, or cannot be
+    ///   opened or parsed as a font.
+    /// - [`Error::NotSupported`] if the font loader (or file I/O) was
+    ///   not compiled in.
     pub fn load_font_from_str(&self, path: &str) -> Result<()> {
         let c_path = alloc::ffi::CString::new(path)?;
         Error::from_raw(unsafe { sys::tvg_font_load(c_path.as_ptr()) })

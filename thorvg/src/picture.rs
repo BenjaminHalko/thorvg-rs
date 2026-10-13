@@ -186,9 +186,11 @@ impl Picture<'_> {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidArguments`] if `path` is empty or
-    /// contains an interior NUL byte, or [`Error::NotSupported`] if the
-    /// extension is unknown or its loader was not compiled in.
+    /// - [`Error::InvalidArguments`] if `path` is empty or contains an
+    ///   interior NUL byte, or the file cannot be opened or decoded by
+    ///   any loader (including an unrecognised extension).
+    /// - [`Error::NotSupported`] if the extension is recognised but its
+    ///   loader (or file I/O) was not compiled in.
     pub fn load_from_str(&mut self, path: &str) -> Result<()> {
         let c_path = CString::new(path)?;
         Error::from_raw(unsafe { sys::tvg_picture_load(self.raw, c_path.as_ptr()) })
@@ -219,9 +221,10 @@ impl Picture<'_> {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidArguments`] if `data` is empty or
-    /// `resource_path` contains an interior NUL byte, or
-    /// [`Error::NotSupported`] if the selected loader is unavailable.
+    /// - [`Error::InvalidArguments`] if `data` is empty or malformed for
+    ///   `mime`, or `resource_path` contains an interior NUL byte.
+    /// - [`Error::NotSupported`] if the loader for `mime` was not
+    ///   compiled in.
     pub fn load_data(
         &mut self,
         data: &[u8],
