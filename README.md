@@ -110,7 +110,7 @@ build pipeline, runtime stubs, and how to override them.
 
 ## API Coverage
 
-157 of the 161 ThorVG C API functions are wrapped (~98%).  Unwrapped:
+181 of the 185 ThorVG C API functions are wrapped (~98%).  Unwrapped:
 the four `tvg_paint_ref` / `tvg_paint_unref` / `tvg_paint_get_ref` /
 `tvg_paint_get_parent` refcount-and-parent helpers (ownership is
 already modelled in the Rust types).
@@ -118,7 +118,7 @@ already modelled in the Rust types).
 - **Canvas** — `SwCanvas` (software, fully wired).  `GlCanvas` and
   `WgCanvas` type wrappers exist for API parity, but the vendored
   build strips the GPU engine — they are not yet runtime-usable
-- **Paint** — opacity, visibility, transforms, clipping, masking, blending, hit-testing
+- **Paint** — opacity, visibility, transforms, clipping, masking, blending, hit-testing, user-data tags
 - **Shape** — paths, rectangles, circles, fill, stroke, gradients, trim path
 - **Gradient** — linear, radial, color stops, spread, transforms
 - **Picture** — load SVG / PNG / Lottie / raw from file or memory
@@ -127,7 +127,8 @@ already modelled in the Rust types).
 - **Scene** — grouping, effects (blur, drop shadow, fill, tint, tritone)
 - **Text** — font loading, styling, wrapping, metrics, outline
 - **Animation** — frame control, segments, duration
-- **LottieAnimation** — slots, markers, tweening, expressions, quality
+- **LottieAnimation** — slots, markers, tweening (static and dynamic), expressions, quality, audio resolver, master volume
+- **Video** — experimental MP4 playback (macOS / iOS, `video` feature)
 - **Saver** — export paint/animation to file
 - **Accessor** — scene tree traversal with callbacks
 
