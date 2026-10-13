@@ -392,12 +392,16 @@ impl Picture<'_> {
 
     /// Installs a Rust closure as the external-asset resolver.
     ///
-    /// thorvg invokes `resolver` from inside [`Picture::load`] /
-    /// [`Picture::load_from_str`] whenever the loaded document
-    /// references an external image, font, etc.  The closure
-    /// receives the requested asset src and returns either the
-    /// resolved bytes paired with a [`MimeType`], or `None` to
-    /// signal that the asset cannot be supplied.
+    /// thorvg invokes `resolver` whenever the loaded document
+    /// references an external image.  The closure receives the
+    /// requested asset src and returns either the resolved bytes
+    /// paired with a [`MimeType`], or `None` to signal that the asset
+    /// cannot be supplied.
+    ///
+    /// Only image assets reach the closure. `ThorVG` also routes font
+    /// requests (e.g. Lottie text layers) through the resolver, but
+    /// those target a text object rather than a picture, so they are
+    /// declined and left to `ThorVG`'s built-in font resolution.
     ///
     /// The closure is stored inside this `Picture` and lives for
     /// the picture's lifetime; calling `set_asset_resolver` again
@@ -614,6 +618,13 @@ where
     F: FnMut(&str) -> Option<(alloc::vec::Vec<u8>, MimeType)> + Send + 'static,
 {
     if data.is_null() || src.is_null() {
+        return false;
+    }
+    // Font requests pass a Text paint; loading picture data into it
+    // would reinterpret the Text as a Picture and corrupt it.
+    let mut kind = sys::Tvg_Type::TVG_TYPE_UNDEF;
+    let r = unsafe { sys::tvg_paint_get_type(paint, &raw mut kind) };
+    if r != sys::Tvg_Result::TVG_RESULT_SUCCESS || kind != sys::Tvg_Type::TVG_TYPE_PICTURE {
         return false;
     }
     let f = unsafe { &mut *data.cast::<F>() };

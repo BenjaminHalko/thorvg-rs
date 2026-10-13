@@ -73,6 +73,14 @@ that also uses `thorvg-sys` directly.
   crashed the Windows test run intermittently. The resolver is now
   detached first. Affects every release since `set_asset_resolver` was
   added. `Video` uses the same order.
+- **Memory corruption when an asset resolver returns data for a font.**
+  ThorVG routes font requests (Lottie text layers) through the picture
+  asset resolver with a text object as the target, and the resolver
+  trampoline loaded the returned bytes into it as if it were a picture.
+  Font requests are now declined before reaching the closure and left
+  to ThorVG's built-in font resolution; the closure only sees image
+  assets, as documented. Surfaced as an intermittent
+  `STATUS_ACCESS_VIOLATION` in the Windows test run.
 
 Inherited from the engine bump: a JPEG-loader heap overflow, Lottie and
 SVG malformed-input hardening, a clip / mask use-after-free, several
