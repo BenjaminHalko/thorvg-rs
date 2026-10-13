@@ -1112,10 +1112,13 @@ fn test_asset_resolver_returns_bytes_path() {
 
     let calls = Arc::new(AtomicUsize::new(0));
     let calls_clone = Arc::clone(&calls);
+    let srcs = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let srcs_clone = Arc::clone(&srcs);
     lottie
         .picture_mut()
-        .set_asset_resolver(move |_src| {
+        .set_asset_resolver(move |src| {
             calls_clone.fetch_add(1, Ordering::SeqCst);
+            srcs_clone.lock().unwrap().push(alloc::string::String::from(src));
             Some((Vec::from(LOGO_PNG), MimeType::Png))
         })
         .unwrap();
@@ -1127,6 +1130,14 @@ fn test_asset_resolver_returns_bytes_path() {
     assert!(
         calls.load(Ordering::SeqCst) >= 1,
         "resolver trampoline (Some branch) should have been called"
+    );
+    // The fixture also declares a font; its request targets a Text
+    // paint and must never reach the closure (loading PNG bytes into a
+    // Text corrupted it, crashing intermittently on Windows).
+    let srcs = srcs.lock().unwrap();
+    assert!(
+        srcs.iter().all(|s| s.ends_with("logo.png")),
+        "only image assets should reach the resolver, got {srcs:?}"
     );
 }
 
@@ -1578,4 +1589,31 @@ fn test_picture_load_error_codes() {
     assert_eq!(pic.load_from_str("/nonexistent/x.jpg"), Err(Error::NotSupported));
     assert_eq!(pic.load_from_str("/nonexistent/x.png"), Err(Error::InvalidArguments));
     assert_eq!(pic.load_from_str("/nonexistent/x.xyz"), Err(Error::InvalidArguments));
+}
+
+// ── Hit-testing & dynamic tweening ─────────────────────────────────
+
+#[test]
+fn test_paint_intersects_region_requires_update() {
+    // Hit-testing needs the paint updated on a canvas; a fresh shape
+    // misses in both modes.
+    let engine = Thorvg::init(0).unwrap();
+    let mut shape = engine.shape().unwrap();
+    shape.append_rect(Rect::new(0.0, 0.0, 32.0, 32.0)).unwrap();
+    assert!(!shape.intersects_region(8, 8, 1, 1, false));
+    assert!(!shape.intersects_region(8, 8, 1, 1, true));
+}
+
+#[test]
+fn test_lottie_tween_to_and_go() {
+    let engine = Thorvg::init(0).unwrap();
+    let mut lottie = engine.lottie_animation().unwrap();
+    assert_eq!(lottie.tween_to(1.0), Err(Error::InsufficientCondition));
+
+    lottie.load_data(LOTTIE_AUDIO_JSON).unwrap();
+    // `tween_go` needs a target from `tween_to` first.
+    assert_eq!(lottie.tween_go(0.5), Err(Error::InsufficientCondition));
+    lottie.tween_to(60.0).unwrap();
+    lottie.tween_go(0.5).unwrap();
+    lottie.tween_go(1.0).unwrap();
 }

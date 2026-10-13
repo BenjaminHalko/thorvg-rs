@@ -835,6 +835,14 @@ pub trait Paint: sealed::Sealed {
         unsafe { sys::tvg_paint_intersects(self.raw(), x, y, w, h) }
     }
 
+    /// Like [`intersects`](Paint::intersects), but with `visible_only`
+    /// set, hidden paints are excluded from the test.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    fn intersects_region(&self, x: i32, y: i32, w: i32, h: i32, visible_only: bool) -> bool {
+        unsafe { sys::tvg_paint_intersects_region(self.raw(), x, y, w, h, visible_only) }
+    }
+
     /// Returns a deep copy of this paint with all properties preserved, or
     /// `None` if duplication fails.
     fn duplicate(&self) -> Option<Self>
