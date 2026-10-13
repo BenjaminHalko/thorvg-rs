@@ -46,6 +46,23 @@ jobs:
       - run: cargo test --workspace --all-targets -- --test-threads=1
       - run: cargo test --workspace --doc -- --test-threads=1
 
+  # The `video` feature compiles ThorVG's AVFoundation backend, which
+  # exists only on Apple platforms, so it is exercised on macOS alone.
+  # Elsewhere the feature is a no-op, covered by the default test job.
+  video:
+    name: video (macos-latest)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test -p thorvg --features video --test integration -- --test-threads=1
+      # The Objective-C++ backend must ship in the crates.io package.
+      - name: Package includes the AVFoundation backend
+        run: cargo package -p thorvg-sys --list --allow-dirty | grep -q 'tvgAvfMediaLoader.mm$'
+
   features:
     name: features (${{ matrix.features }})
     runs-on: ubuntu-latest

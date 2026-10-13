@@ -31,6 +31,11 @@ pub enum Error {
     MemoryCorruption,
     /// An unsupported engine feature or option was requested.
     NotSupported,
+    /// An underlying system operation failed, e.g. a platform media
+    /// framework rejecting a video.
+    ///
+    /// Experimental upstream: `ThorVG` may refine when it is reported.
+    SystemError,
     /// `ThorVG` reported a failure that does not map to a more specific
     /// variant.
     Unknown,
@@ -46,6 +51,7 @@ impl Error {
             sys::Tvg_Result::TVG_RESULT_FAILED_ALLOCATION => Err(Error::FailedAllocation),
             sys::Tvg_Result::TVG_RESULT_MEMORY_CORRUPTION => Err(Error::MemoryCorruption),
             sys::Tvg_Result::TVG_RESULT_NOT_SUPPORTED => Err(Error::NotSupported),
+            sys::Tvg_Result::TVG_RESULT_SYSTEM_ERROR => Err(Error::SystemError),
             sys::Tvg_Result::TVG_RESULT_UNKNOWN => Err(Error::Unknown),
         }
     }
@@ -59,6 +65,7 @@ impl fmt::Display for Error {
             Error::FailedAllocation => write!(f, "failed allocation"),
             Error::MemoryCorruption => write!(f, "memory corruption"),
             Error::NotSupported => write!(f, "not supported"),
+            Error::SystemError => write!(f, "system error"),
             Error::Unknown => write!(f, "unknown error"),
         }
     }

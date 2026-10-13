@@ -1401,3 +1401,165 @@ fn test_full_pipeline_scene_with_effects() {
 
     assert!(buffer.iter().any(|&px| px != 0));
 }
+
+// ── Paint user data ────────────────────────────────────────────────
+
+#[test]
+fn test_paint_user_data_roundtrip() {
+    let engine = Thorvg::init(0).unwrap();
+    let mut shape = engine.shape().unwrap();
+    assert_eq!(shape.user_data(), 0);
+
+    shape.set_user_data(usize::MAX).unwrap();
+    assert_eq!(shape.user_data(), usize::MAX);
+    shape.set_user_data(7).unwrap();
+    assert_eq!(shape.user_data(), 7);
+
+    // ThorVG leaves the slot behind on duplicate.
+    let dup = shape.duplicate().unwrap();
+    assert_eq!(dup.user_data(), 0);
+}
+
+#[test]
+fn test_paint_user_data_via_accessor() {
+    let engine = Thorvg::init(0).unwrap();
+    let mut scene = engine.scene().unwrap();
+    let mut shape = engine.shape().unwrap();
+    shape.append_rect(Rect::new(0.0, 0.0, 10.0, 10.0)).unwrap();
+    shape.set_user_data(0xC0FFEE).unwrap();
+    scene.add(shape).unwrap();
+
+    let mut acc = engine.accessor().unwrap();
+    let mut seen = alloc::vec::Vec::new();
+    acc.for_each(&scene, |_, paint| {
+        seen.push(paint.user_data());
+        true
+    })
+    .unwrap();
+    assert!(seen.contains(&0xC0FFEE), "accessor saw tags {seen:?}");
+}
+
+// ── Lottie volume & capabilities ───────────────────────────────────
+
+#[test]
+fn test_lottie_expressions_supported_matches_features() {
+    let _engine = Thorvg::init(0).unwrap();
+    assert_eq!(
+        LottieAnimation::expressions_supported(),
+        cfg!(all(feature = "lottie", feature = "expressions"))
+    );
+}
+
+#[test]
+fn test_lottie_volume_requires_loaded_animation() {
+    let engine = Thorvg::init(0).unwrap();
+    let mut lottie = engine.lottie_animation().unwrap();
+    assert_eq!(lottie.set_volume(0.5), Err(Error::InsufficientCondition));
+    assert!(lottie.volume().abs() < f32::EPSILON);
+}
+
+#[test]
+fn test_lottie_master_volume_scales_audio() {
+    use alloc::sync::Arc;
+    use std::sync::Mutex;
+
+    let engine = Thorvg::init(0).unwrap();
+    let mut lottie = engine.lottie_animation().unwrap();
+    lottie.load_data(LOTTIE_AUDIO_JSON).unwrap();
+    assert!((lottie.volume() - 1.0).abs() < f32::EPSILON);
+
+    let volumes: Arc<Mutex<alloc::vec::Vec<f32>>> = Arc::default();
+    let volumes_c = Arc::clone(&volumes);
+    lottie
+        .set_audio_resolver(move |info: &AudioInfo| {
+            if info.is_active() {
+                volumes_c.lock().unwrap().push(info.volume());
+            }
+        })
+        .unwrap();
+
+    // Each activation (inactive -> active) reports the effective volume.
+    let _ = lottie.set_frame(30.0);
+    lottie.set_volume(0.5).unwrap();
+    assert!((lottie.volume() - 0.5).abs() < f32::EPSILON);
+    let _ = lottie.set_frame(90.0);
+    let _ = lottie.set_frame(30.0);
+
+    let got = volumes.lock().unwrap().clone();
+    assert!(got.len() >= 2, "expected two activations, got {got:?}");
+    let (full, half) = (got[0], got[got.len() - 1]);
+    assert!(full > 0.0, "unmuted layer reported volume {full}");
+    assert!((half - full * 0.5).abs() < 1e-3, "master volume not applied: {got:?}");
+}
+
+// ── Video ──────────────────────────────────────────────────────────
+
+/// Whether this build links a `ThorVG` video backend.
+const HAS_VIDEO: bool = cfg!(all(feature = "video", any(target_os = "macos", target_os = "ios")));
+
+/// 1 s, 16x16, 10 fps, solid red H.264 clip (see `assets/README.md`).
+const RED_MP4: &[u8] = include_bytes!("assets/red_1s.mp4");
+
+#[test]
+fn test_video_unsupported_without_backend() {
+    let engine = Thorvg::init(0).unwrap();
+    let video = engine.video();
+    if HAS_VIDEO {
+        assert!(video.is_ok());
+    } else {
+        assert_eq!(video.unwrap_err(), Error::NotSupported);
+    }
+}
+
+#[test]
+fn test_video_unloaded_state() {
+    if !HAS_VIDEO {
+        return;
+    }
+    let engine = Thorvg::init(0).unwrap();
+    let mut video = engine.video().unwrap();
+    assert_eq!(video.play(), Err(Error::InsufficientCondition));
+    assert_eq!(video.seek(0.0), Err(Error::InsufficientCondition));
+    assert_eq!(video.set_volume(2.0), Err(Error::InvalidArguments));
+    assert!(video.duration().abs() < f32::EPSILON);
+    assert!(!video.is_looping());
+    assert!(!video.is_muted());
+}
+
+#[test]
+fn test_video_load_and_render_first_frame() {
+    if !HAS_VIDEO {
+        return;
+    }
+    let engine = Thorvg::init(0).unwrap();
+    let mut video = engine.video().unwrap();
+    video.picture_mut().load_data(RED_MP4, MimeType::Mp4, None).unwrap();
+    assert!((video.duration() - 1.0).abs() < 0.1, "duration {}", video.duration());
+
+    video.set_loop(true).unwrap();
+    assert!(video.is_looping());
+    video.set_muted(true).unwrap();
+    assert!(video.is_muted());
+    video.set_volume(0.25).unwrap();
+    assert!((video.volume() - 0.25).abs() < f32::EPSILON);
+    assert_eq!(video.seek(5.0), Err(Error::InvalidArguments));
+    video.seek(0.5).unwrap();
+
+    // The loader decodes a still frame on load, so it renders without
+    // playback. Red in ABGR8888 is 0xff0000ff; allow codec drift.
+    let mut canvas = engine.sw_canvas(EngineOption::Default).unwrap();
+    let mut buffer = vec![0u32; 16 * 16];
+    unsafe { canvas.set_target(&mut buffer, 16, 16, 16, ColorSpace::ABGR8888) }.unwrap();
+    let mut frame = video.picture().duplicate().unwrap();
+    frame.set_size(16.0, 16.0).unwrap();
+    canvas.add(frame).unwrap();
+    canvas.draw(true).unwrap();
+    canvas.sync().unwrap();
+    let px = buffer[8 * 16 + 8];
+    let (r, g, b) = (px & 0xff, (px >> 8) & 0xff, (px >> 16) & 0xff);
+    assert!(r > 200 && g < 60 && b < 60, "centre pixel {px:#010x} is not red");
+
+    video.play().unwrap();
+    video.pause().unwrap();
+    video.stop().unwrap();
+}

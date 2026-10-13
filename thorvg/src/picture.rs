@@ -55,6 +55,11 @@ pub enum MimeType {
     Lottie,
     /// Raw pixel buffer (`raw`).
     Raw,
+    /// MP4 video (`mp4`), played through [`Video`](crate::Video).
+    ///
+    /// Requires the `video` feature on a platform with a `ThorVG` media
+    /// backend (macOS / iOS); elsewhere loading reports an error.
+    Mp4,
 }
 
 impl MimeType {
@@ -66,6 +71,7 @@ impl MimeType {
             MimeType::Webp => c"webp",
             MimeType::Lottie => c"lottie+json",
             MimeType::Raw => c"raw",
+            MimeType::Mp4 => c"mp4",
         }
     }
 }

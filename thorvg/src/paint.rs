@@ -358,6 +358,14 @@ impl BorrowedPaint<'_> {
         unsafe { sys::tvg_paint_get_id(self.raw) }
     }
 
+    /// Returns the tag set by [`Paint::set_user_data`], or `0` if none
+    /// was set.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    pub fn user_data(&self) -> usize {
+        unsafe { sys::tvg_paint_get_data(self.raw) }.addr()
+    }
+
     /// Returns the opacity, in the range `0..=255`.
     ///
     /// # Errors
@@ -771,6 +779,37 @@ pub trait Paint: sealed::Sealed {
     /// *Experimental in `ThorVG`; the API may change.*
     fn id(&self) -> u32 {
         unsafe { sys::tvg_paint_get_id(self.raw()) }
+    }
+
+    /// Attaches an application-defined tag to this paint.
+    ///
+    /// `ThorVG` stores the value verbatim and never interprets it, so it
+    /// is exposed as a plain `usize` rather than a pointer: use it as a
+    /// key or index into your own storage (an entity id, a slab index,
+    /// …), and read it back with [`user_data`](Paint::user_data) or
+    /// [`BorrowedPaint::user_data`] while walking a scene. It is not
+    /// copied by [`duplicate`](Paint::duplicate).
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::InvalidArguments`] if the underlying handle is
+    /// invalid.
+    fn set_user_data(&mut self, data: usize) -> Result<()> {
+        // An integer round-trips through the pointer-sized slot; thorvg
+        // never dereferences it.
+        Error::from_raw(unsafe {
+            sys::tvg_paint_set_data(self.raw(), core::ptr::without_provenance_mut(data))
+        })
+    }
+
+    /// Returns the tag set by [`set_user_data`](Paint::set_user_data), or
+    /// `0` if none was set.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    fn user_data(&self) -> usize {
+        unsafe { sys::tvg_paint_get_data(self.raw()) }.addr()
     }
 
     /// Returns the concrete [`PaintType`] of this paint.

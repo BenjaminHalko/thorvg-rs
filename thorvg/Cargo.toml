@@ -1,6 +1,6 @@
 [package]
 name = "thorvg"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 license = "MIT"
 description = "Safe Rust bindings to the ThorVG vector graphics library"
@@ -35,9 +35,10 @@ fonts = ["thorvg-sys/fonts"]
 expressions = ["thorvg-sys/expressions"]
 threads = ["thorvg-sys/threads"]
 file-io = ["thorvg-sys/file-io"]
+video = ["thorvg-sys/video"]
 
 [dependencies]
-thorvg-sys = { path = "../thorvg-sys", version = "0.3.1", default-features = false }
+thorvg-sys = { path = "../thorvg-sys", version = "0.4.0", default-features = false }
 # no_std trig for Matrix::rotate (sinf/cosf are unavailable in core).
 libm = "0.2"
 
