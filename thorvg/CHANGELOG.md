@@ -60,6 +60,14 @@ that also uses `thorvg-sys` directly.
 
 ### Fixed
 
+- **Use-after-free when dropping an `Animation` / `LottieAnimation`
+  whose picture has an asset resolver.** `Drop` deleted the C animation
+  (freeing its picture) before the borrowed picture wrapper unregistered
+  the resolver on the freed handle. Found by AddressSanitizer; it
+  crashed the Windows test run intermittently. The resolver is now
+  detached first. Affects every release since `set_asset_resolver` was
+  added. `Video` uses the same order.
+
 Inherited from the engine bump: a JPEG-loader heap overflow, Lottie and
 SVG malformed-input hardening, a clip / mask use-after-free, several
 loader memory leaks, and Lottie matte, opacity, trim-path and gradient

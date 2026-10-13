@@ -202,6 +202,11 @@ impl<'eng> Animation<'eng> {
 
 impl Drop for Animation<'_> {
     fn drop(&mut self) {
+        // Detach any asset resolver while the picture is still alive:
+        // `tvg_animation_del` frees it, and the borrowed `picture` field
+        // drops only afterwards, so its own unregistration would touch
+        // freed memory.
+        let _ = self.picture.clear_asset_resolver();
         unsafe {
             sys::tvg_animation_del(self.raw);
         }

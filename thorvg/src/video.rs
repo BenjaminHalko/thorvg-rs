@@ -209,6 +209,9 @@ impl<'eng> Video<'eng> {
 
 impl Drop for Video<'_> {
     fn drop(&mut self) {
+        // Detach any asset resolver while the picture is still alive
+        // (see `Animation`'s `Drop`).
+        let _ = self.picture.clear_asset_resolver();
         unsafe {
             sys::tvg_video_del(self.raw);
         }
