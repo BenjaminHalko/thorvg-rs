@@ -397,7 +397,48 @@ impl LottieAnimation<'_> {
         Error::from_raw(unsafe { sys::tvg_lottie_animation_set_quality(self.inner.raw(), value) })
     }
 
+    // ── Capabilities ───────────────────────────────────────────────
+
+    /// Returns `true` if this build of `ThorVG` evaluates Lottie
+    /// expressions.
+    ///
+    /// Reflects the compiled-in engine, not a loaded animation: it is
+    /// `false` when the `expressions` (or `lottie`) feature is disabled,
+    /// or when linking a system `ThorVG` built without them.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    pub fn expressions_supported() -> bool {
+        unsafe { sys::tvg_lottie_animation_expressions_supported() }
+    }
+
     // ── Audio ──────────────────────────────────────────────────────
+
+    /// Sets the master playback volume applied to all media assets.
+    ///
+    /// The effective volume of each asset is this value multiplied by
+    /// the asset's own volume. `1.0` keeps the original volume, `0.0`
+    /// mutes all media, and values above `1.0` amplify; the recommended
+    /// range is `0.0..=2.0`. It reaches audio through
+    /// [`AudioInfo::volume`] and video assets (with the `video` feature)
+    /// directly.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    ///
+    /// # Errors
+    ///
+    /// - [`Error::InsufficientCondition`] if no animation is loaded.
+    /// - [`Error::NotSupported`] if Lottie support is not compiled in.
+    pub fn set_volume(&mut self, volume: f32) -> Result<()> {
+        Error::from_raw(unsafe { sys::tvg_lottie_animation_set_volume(self.inner.raw(), volume) })
+    }
+
+    /// Returns the master playback volume, or `0.0` if no animation is
+    /// loaded.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    pub fn volume(&self) -> f32 {
+        unsafe { sys::tvg_lottie_animation_get_volume(self.inner.raw()) }
+    }
 
     /// Installs an audio resolver for the animation's Lottie audio layers.
     ///

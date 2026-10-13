@@ -341,6 +341,9 @@ impl Shape<'_> {
     ///
     /// `(cx1, cy1)` and `(cx2, cy2)` are the first and second control
     /// points. The current point becomes `(x, y)`.
+    ///
+    /// Start the path with [`move_to`](Self::move_to): rendering is not
+    /// guaranteed when `cubic_to` is the first command.
     pub fn cubic_to(
         &mut self,
         cx1: f32,

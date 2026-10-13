@@ -54,7 +54,7 @@ impl<'eng> Animation<'eng> {
     /// Suppresses `Drop`, so the caller is responsible for the C
     /// handle's lifetime.  Used by `Saver::save_animation_to_str`,
     /// where the C side takes ownership of the handle on every exit
-    /// path under `refCnt <= 1` (see `tvgSaver.cpp:142-172`) —
+    /// path under `refCnt <= 1` (see `tvgSaver.cpp:130-160`) —
     /// keeping the Rust `Drop` active would double-free.
     pub(crate) fn into_raw(self) -> sys::Tvg_Animation {
         let me = core::mem::ManuallyDrop::new(self);
@@ -202,6 +202,11 @@ impl<'eng> Animation<'eng> {
 
 impl Drop for Animation<'_> {
     fn drop(&mut self) {
+        // Detach any asset resolver while the picture is still alive:
+        // `tvg_animation_del` frees it, and the borrowed `picture` field
+        // drops only afterwards, so its own unregistration would touch
+        // freed memory.
+        let _ = self.picture.clear_asset_resolver();
         unsafe {
             sys::tvg_animation_del(self.raw);
         }

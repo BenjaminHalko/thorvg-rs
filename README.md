@@ -55,9 +55,10 @@ canvas.sync().unwrap();
 | `expressions` | ✅ | Lottie expressions via JerryScript (~200 KB RAM) |
 | `threads` | ✅ | Multi-threaded TaskScheduler (`std::thread`) |
 | `file-io` | ✅ | Compiles ThorVG's filesystem I/O code path (without `std`, only the byte-slice-taking `load_data` / `load_from_str` variants are exposed) |
+| `video` | | Experimental video playback (`Video`), plus video in Lottie image assets. ThorVG ships a backend only for macOS / iOS (AVFoundation); elsewhere the feature is a no-op and `Video::new` returns `Error::NotSupported` |
 
 `vendored`, `lottie`, `svg`, `png`, `fonts`, `expressions`,
-`threads`, and `file-io` are pass-throughs to the corresponding
+`threads`, `file-io`, and `video` are pass-throughs to the corresponding
 `thorvg-sys` features.  `std` is wrapper-only — it enables
 `thorvg-sys/file-io` plus the path-taking wrapper APIs.
 
@@ -65,14 +66,14 @@ canvas.sync().unwrap();
 
 ```toml
 [dependencies]
-thorvg = "0.5"
+thorvg = "0.6"
 ```
 
 ### Embedded / `no_std` (pick only what you need)
 
 ```toml
 [dependencies]
-thorvg = { version = "0.5", default-features = false, features = ["vendored", "lottie", "svg"] }
+thorvg = { version = "0.6", default-features = false, features = ["vendored", "lottie", "svg"] }
 ```
 
 This gives you Lottie + SVG playback with no threads, no JerryScript,

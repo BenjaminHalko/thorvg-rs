@@ -11,6 +11,63 @@ bundling ThorVG `1.0.5`. Because the crate is `0.x`, a **minor** bump is
 breaking; the safe [`thorvg`](../thorvg/CHANGELOG.md) crate's dependency
 moves in lockstep.
 
+## [0.4.0+thorvg-1.1.2] - 2026-10-13
+
+Bumps the vendored engine to **ThorVG 1.1.2** (through 1.1.1) and
+regenerates the FFI. A **minor** (breaking) bump: `Tvg_Result` gains a
+variant, which breaks exhaustive matches on it. Every other binding
+change is an addition.
+
+### Changed
+
+- **Bundled ThorVG 1.1.0 → 1.1.2.** The vendored submodule tracks the
+  rebased `bare-metal/v1.1.2` patch branch; the series applied unchanged
+  and `THORVG_VERSION_STRING` is updated to match.
+- **`Tvg_Result::TVG_RESULT_SYSTEM_ERROR`** (new, experimental upstream)
+  — reported when an underlying system operation fails. Loaders also now
+  return more specific results from `tvg_picture_load*` instead of a
+  generic failure (thorvg/thorvg@58940d8d).
+
+### Added
+
+- **`video` feature** (off by default) — compiles ThorVG's experimental
+  media loader with its AVFoundation backend
+  (`src/loaders/media/apple/tvgAvfMediaLoader.mm`) and links the
+  `AVFoundation`, `CoreVideo`, `CoreMedia`, `Foundation` and
+  `CoreFoundation` frameworks. ThorVG ships a native backend only for
+  Apple platforms, so the feature applies on macOS / iOS and is a no-op
+  elsewhere. It also enables video playback inside Lottie image assets.
+- **`tvg_video_*`** — video playback API (`new` / `del` /
+  `get_picture`, `play` / `pause` / `stop` / `seek`, loop, volume, mute,
+  time and duration). Always bound; `tvg_video_new` returns null when no
+  media backend is compiled in.
+- **`tvg_paint_set_data`** / **`tvg_paint_get_data`** — an opaque
+  user-data slot on every paint.
+- **`tvg_lottie_animation_set_volume`** /
+  **`tvg_lottie_animation_get_volume`** — master volume for a Lottie
+  animation's media assets.
+- **`tvg_lottie_animation_expressions_supported`** — whether the build
+  evaluates Lottie expressions.
+
+### Fixed
+
+Inherited from the engine bump:
+
+- Security hardening: a heap overflow in the JPEG loader, malformed
+  Lottie asset handling, an out-of-bounds read on malformed SVG tags, a
+  use-after-free from dangling clip / mask parent pointers, and memory
+  leaks in the PNG and font loaders.
+- Lottie: matte sources hidden when referenced by `tp`, double-applied
+  solid-layer opacity, playback clamping to the last frame, and audio
+  offsets of trimmed layers.
+- Trim paths losing `moveTo` on wrap-around, drop-shadow offset
+  transforms, and anti-aliasing of 8-bit and repeat gradients.
+
+### Packaging
+
+- `*.mm` sources are now part of the package `include` list, so the
+  AVFoundation backend ships in the published crate.
+
 ## [0.3.2+thorvg-1.1.0] - 2026-08-18
 
 Packaging fix; same **ThorVG 1.1.0** engine and identical FFI as
@@ -38,6 +95,7 @@ Packaging fix; same **ThorVG 1.1.0** engine and identical FFI as
   against a `target_os = "none"` target, which the existing
   workspace-tree build cannot do.
 
+## [0.3.1+thorvg-1.1.0] - 2026-08-17
 
 Bumps the vendored engine to **ThorVG 1.1.0** and regenerates the FFI. A
 **patch** (non-breaking) bump: the regenerated bindings only add symbols

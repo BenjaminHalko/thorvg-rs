@@ -10,6 +10,69 @@ version (`0.y`), per SemVer's `0.x` rule.
 The companion `thorvg-sys` FFI crate is versioned independently — see
 [`thorvg-sys/CHANGELOG.md`](../thorvg-sys/CHANGELOG.md).
 
+## [0.6.0] - 2026-10-13
+
+Tracks **ThorVG 1.1.2** via `thorvg-sys 0.4.0`. The crate's own API is
+purely additive, but this is a **minor** (breaking) bump: `thorvg`
+re-exposes `thorvg-sys` handle types through the `Paint::raw` /
+`Paint::into_raw` escape hatches, so moving the `thorvg-sys` dependency
+across its breaking `0.3 → 0.4` boundary is breaking for downstream code
+that also uses `thorvg-sys` directly.
+
+### Added
+
+- **`Video`** and **`Thorvg::video`** — experimental video playback
+  behind the new **`video`** feature (off by default). The video decodes
+  into a `Picture` it owns: load an MP4 into it, add a `duplicate` to a
+  canvas, and drive it with `play` / `pause` / `stop` / `seek`,
+  `set_loop`, `set_volume`, `set_muted`, `time` and `duration`. ThorVG
+  ships a backend only for macOS / iOS (AVFoundation); elsewhere
+  `Thorvg::video` returns `Error::NotSupported`.
+- **`MimeType::Mp4`** — for loading video from memory.
+- **`Paint::set_user_data`** / **`Paint::user_data`** and
+  **`BorrowedPaint::user_data`** — attach an application-defined tag to
+  a paint and read it back, including while walking a scene with the
+  `Accessor`. Exposed as a plain `usize` rather than a pointer: ThorVG
+  never frees or copies the slot, so a tag keyed into your own storage
+  is the only shape that is safe without leaking or dangling.
+- **`LottieAnimation::set_volume`** / **`LottieAnimation::volume`** —
+  master volume applied to all media assets; reaches the audio resolver
+  through `AudioInfo::volume`.
+- **`LottieAnimation::expressions_supported`** — whether the linked
+  engine evaluates Lottie expressions.
+- **`Error::SystemError`** — maps the new `TVG_RESULT_SYSTEM_ERROR`
+  (`Error` is `#[non_exhaustive]`, so this is additive).
+
+### Changed
+
+- **`thorvg-sys` dependency `0.3.1` → `0.4.0`** (now bundles ThorVG
+  1.1.2).
+- **Picture loading reports each loader's own result** (ThorVG
+  preserves it instead of collapsing failures). Behavioural change for
+  callers matching on errors: malformed data passed to
+  `Picture::load_data` now returns `Error::InvalidArguments` (was
+  `Error::NotSupported`), and a path with a recognised extension whose
+  loader is not compiled in now returns `Error::NotSupported` (was
+  `Error::InvalidArguments`). The `# Errors` docs of `Picture::load*`
+  and `Thorvg::load_font_from_str` are updated to match.
+- `Shape::cubic_to` documents upstream's new warning: rendering is not
+  guaranteed when it is the first path command.
+
+### Fixed
+
+- **Use-after-free when dropping an `Animation` / `LottieAnimation`
+  whose picture has an asset resolver.** `Drop` deleted the C animation
+  (freeing its picture) before the borrowed picture wrapper unregistered
+  the resolver on the freed handle. Found by AddressSanitizer; it
+  crashed the Windows test run intermittently. The resolver is now
+  detached first. Affects every release since `set_asset_resolver` was
+  added. `Video` uses the same order.
+
+Inherited from the engine bump: a JPEG-loader heap overflow, Lottie and
+SVG malformed-input hardening, a clip / mask use-after-free, several
+loader memory leaks, and Lottie matte, opacity, trim-path and gradient
+rendering fixes. See the `thorvg-sys` 0.4.0 changelog for details.
+
 ## [0.5.1] - 2026-08-17
 
 Tracks **ThorVG 1.1.0** via `thorvg-sys 0.3.1`. A **patch**

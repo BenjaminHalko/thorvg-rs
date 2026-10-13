@@ -40,7 +40,7 @@
 //!
 //! Each feature is forwarded to `thorvg-sys`, controlling which
 //! `ThorVG` loaders and capabilities are compiled into the static
-//! library. All listed features are enabled by default.
+//! library. All listed features except `video` are enabled by default.
 //!
 //! | Feature       | Default | Effect                                                              |
 //! |---------------|---------|---------------------------------------------------------------------|
@@ -53,6 +53,7 @@
 //! | `png`         | yes     | PNG image loader.                                                   |
 //! | `fonts`       | yes     | Scalable font (TTF) support for text.                              |
 //! | `expressions` | yes     | Lottie expression evaluation.                                       |
+//! | `video`       | no      | Experimental [`Video`] playback (macOS / iOS only; no-op elsewhere). |
 //!
 //! # Quick Start
 //!
@@ -113,6 +114,7 @@ mod saver;
 mod scene;
 mod shape;
 mod text;
+mod video;
 
 pub use accessor::{Accessor, BorrowedAccessor};
 pub use animation::Animation;
@@ -134,6 +136,7 @@ pub use color::{ColorSpace, Rgb, Rgba};
 pub use scene::{BlurBorder, BlurDirection, DropShadow, GaussianBlur, Scene, Tint, Tritone};
 pub use shape::{Circle, FillRule, PaintOrder, Rect, Shape, StrokeCap, StrokeJoin};
 pub use text::{GlyphMetrics, Text, TextMetrics, TextWrap};
+pub use video::Video;
 
 use thorvg_sys as sys;
 
@@ -388,6 +391,19 @@ impl Thorvg {
         LottieAnimation::new()
     }
 
+    /// Creates a new [`Video`] player bound to this engine.
+    ///
+    /// *Experimental in `ThorVG`; the API may change.*
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::NotSupported`] if `ThorVG` was built without a
+    /// video backend: the `video` feature is off, or the target is not
+    /// macOS / iOS.
+    pub fn video(&self) -> Result<Video<'_>> {
+        Video::new()
+    }
+
     // ── Utility factories ──────────────────────────────────────────
 
     /// Creates a new [`Saver`] bound to this engine.
@@ -419,10 +435,11 @@ impl Thorvg {
     ///
     /// # Errors
     ///
-    /// - [`Error::InvalidArguments`] if `path` is empty, invalid, or
-    ///   contains an interior NUL byte.
-    /// - [`Error::NotSupported`] if the file extension is not a
-    ///   recognized font format.
+    /// - [`Error::InvalidArguments`] if `path` is empty, contains an
+    ///   interior NUL byte, has an unrecognised extension, or cannot be
+    ///   opened or parsed as a font.
+    /// - [`Error::NotSupported`] if the font loader (or file I/O) was
+    ///   not compiled in.
     pub fn load_font_from_str(&self, path: &str) -> Result<()> {
         let c_path = alloc::ffi::CString::new(path)?;
         Error::from_raw(unsafe { sys::tvg_font_load(c_path.as_ptr()) })
