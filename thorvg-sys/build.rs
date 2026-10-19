@@ -86,7 +86,8 @@ fn build_vendored_cc(thorvg_src: &Path, manifest_dir: &Path, out_dir: &Path) {
 ///   * neither — a self-contained SDK runtime owns the link surface;
 ///     we suppress directives that would conflict with it.
 ///
-/// `is_msvc` is a separate flag-dialect branch in `configure_thorvg_build`.
+/// `is_msvc` gates NOMINMAX in `configure_thorvg_build`; the flag dialect
+/// there follows the compiler (`is_like_msvc`), not the target.
 struct TargetInfo {
     os: String,
     env: String,
@@ -275,12 +276,24 @@ fn configure_thorvg_build(target: &TargetInfo, multilib: &[String]) -> cc::Build
     // definitions as `dllimport` (C2491). Mirrors meson's `-DTVG_STATIC`.
     build.define("TVG_STATIC", None);
 
-    // MSVC: the Windows SDK defines `min`/`max` as macros, which mangle
-    // tvgMath.h's `Point min(...)` / `max(...)` declarations (C2059).
-    // NOMINMAX suppresses them; /EHsc selects the standard C++ exception
-    // model (exceptions are not disabled on MSVC, unlike the flags below).
+    // The flag dialect follows the compiler, not the target: cl and
+    // clang-cl take MSVC-style flags, but clang++ targeting MSVC (e.g.
+    // `CXX=clang++`) takes GNU-style ones and reads `/EHsc` as a file.
+    // If the compiler can't be resolved here, fall back to the target.
+    let msvc_flags = build
+        .try_get_compiler()
+        .map_or(target.is_msvc, |tool| tool.is_like_msvc());
+
+    // MSVC targets: the Windows SDK defines `min`/`max` as macros, which
+    // mangle tvgMath.h's `Point min(...)` / `max(...)` declarations
+    // (C2059).  NOMINMAX suppresses them, whichever compiler reads the
+    // headers.  MSVC-style compilers also get /EHsc, selecting the
+    // standard C++ exception model (exceptions are not disabled there,
+    // unlike the flags below).
     if target.is_msvc {
         build.define("NOMINMAX", None);
+    }
+    if msvc_flags {
         build.flag("/EHsc");
     }
 
@@ -298,8 +311,8 @@ fn configure_thorvg_build(target: &TargetInfo, multilib: &[String]) -> cc::Build
     }
 
     // Mirror upstream's meson flag set (`src/meson.build`) — pure
-    // code-shape choices, safe on every non-MSVC target.
-    if !target.is_msvc {
+    // code-shape choices, safe with every non-MSVC-style compiler.
+    if !msvc_flags {
         for f in &[
             "-fno-exceptions",
             "-fno-rtti",
