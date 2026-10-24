@@ -41,6 +41,8 @@ include = [
     "picolibc/libc/**",
     "picolibc/libm/**",
     "picolibc-config/**",
+    # webgpu.h for the `wg` feature, and its license (BSD-3-Clause).
+    "webgpu-headers/**",
 ]
 
 [features]
@@ -60,6 +62,10 @@ expressions = []   # Lottie expressions via JerryScript (~200 KB RAM)
 threads     = []   # Multi-threaded TaskScheduler (std::thread)
 file-io     = []   # Filesystem I/O APIs (Picture::load, etc.)
 video       = []   # Experimental video playback (AVFoundation; macOS/iOS only, no-op elsewhere)
+# ThorVG's WebGPU engine beside the CPU one (`tvg_wgcanvas_*`), built
+# against the vendored webgpu-headers/webgpu/webgpu.h. The final binary
+# links an implementation of that header: none is brought in here.
+wg          = []
 
 [build-dependencies]
 bindgen = "0.71"

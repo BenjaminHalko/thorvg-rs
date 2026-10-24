@@ -61,3 +61,14 @@ bsearch, …) without depending on the cross toolchain's libc.a.
 - **Files:** `thorvg-sys/picolibc/COPYING.picolibc` (full machine-
   readable manifest in Debian DEP-5 format).
 - **Upstream:** <https://github.com/picolibc/picolibc>
+
+## webgpu-headers
+
+Vendored at `thorvg-sys/webgpu-headers/webgpu/webgpu.h` (webgpu-headers
+`673658bc`). Compiled against only with the `wg` feature, by ThorVG's
+WebGPU engine.
+
+- **License:** BSD-3-Clause
+- **Copyright:** 2019-2023 WebGPU-Native developers
+- **File:** `thorvg-sys/webgpu-headers/LICENSE`
+- **Upstream:** <https://github.com/webgpu-native/webgpu-headers>

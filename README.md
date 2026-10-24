@@ -187,6 +187,10 @@ of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch 
 kept alive past exit), plus Lottie text fixes cherry-picked onto it. (`creator-tui` is the same
 on ThorVG v1.1.2.)
 
+The `wg-feature` branch points it at `creator-tui-1.1.3-wg` instead: `creator-tui-1.1.3` plus one
+fix to the WebGPU engine, which the `wg` feature builds. Its scissor rects are clamped to the
+render target: one past the target's edge made wgpu-native end the process.
+
 | Fix branch (one commit on upstream main) | What it fixes |
 |---|---|
 | `fix/text-anchor-init` | a text layer's alignment anchor is (0, 0) when the file has none, not uninitialized |
