@@ -193,6 +193,7 @@ and ThorVG's globals kept alive past exit), plus Lottie text fixes cherry-picked
 | `fix/text-range-random-whole` | a randomized text range as wide as the text no longer divides by zero |
 | `fix/text-range-basis-percent` | a range in percent counts the units of its basis (words, lines, characters without spaces) |
 | `fix/text-range-utf8` | text ranges count letters, not UTF-8 bytes |
+| `fix/text-search-glyph-scope` | a lower case letter in all capitals or small capitals is looked up as its capital through a buffer still in scope, not a stack slot gone by then |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
