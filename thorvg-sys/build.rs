@@ -31,7 +31,10 @@ fn build_vendored_cc(thorvg_src: &Path, manifest_dir: &Path, out_dir: &Path) {
     let multilib = cross_toolchain_multilib_args(&target);
 
     let sources = collect_thorvg_sources(&src, &target);
-    let include_dirs = thorvg_include_dirs(thorvg_src, &src, out_dir, &target);
+    if cfg!(feature = "wg") && target.is_bare_metal {
+        panic!("the `wg` feature (ThorVG's WebGPU engine) needs a hosted target");
+    }
+    let include_dirs = thorvg_include_dirs(manifest_dir, thorvg_src, &src, out_dir, &target);
 
     let mut build = configure_thorvg_build(&target, &multilib);
 
@@ -58,6 +61,9 @@ fn build_vendored_cc(thorvg_src: &Path, manifest_dir: &Path, out_dir: &Path) {
     }
     for src_file in &sources {
         build.file(src_file);
+    }
+    if cfg!(feature = "wg") {
+        build.objects(compile_wg_engine(&src, &include_dirs, &target, &multilib));
     }
     build.compile("thorvg");
 
@@ -148,7 +154,8 @@ const AVF_FRAMEWORKS: &[&str] = &[
 /// loader.  Loaders (lottie / svg / png / fonts) are feature-gated;
 /// JerryScript is pulled recursively when `expressions` is on; the
 /// AVFoundation media backend when `video` is on for an Apple target.
-/// GPU engine sources are always excluded — thorvg-sys is SW-only.
+/// GPU engine sources are excluded here; with `wg` the WebGPU engine's
+/// are compiled apart (`compile_wg_engine`), the GL engine's never.
 fn collect_thorvg_sources(src: &Path, target: &TargetInfo) -> Vec<PathBuf> {
     let mut sources: Vec<PathBuf> = Vec::new();
 
@@ -197,6 +204,7 @@ fn collect_thorvg_sources(src: &Path, target: &TargetInfo) -> Vec<PathBuf> {
 /// `out_dir` carries the generated `config.h`; the rest mirror source
 /// directories so cross-TU `#include "tvg*.h"` lookups resolve.
 fn thorvg_include_dirs(
+    manifest_dir: &Path,
     thorvg_src: &Path,
     src: &Path,
     out_dir: &Path,
@@ -250,7 +258,51 @@ fn thorvg_include_dirs(
         include_dirs.push(src.join("loaders/media"));
         include_dirs.push(src.join("loaders/media/apple"));
     }
+    if cfg!(feature = "wg") {
+        // tvgCanvas.cpp and tvgInitializer.cpp include the WebGPU
+        // renderer's header, and it includes <webgpu/webgpu.h>.
+        include_dirs.push(src.join("renderer/gpu_engine"));
+        include_dirs.push(src.join("renderer/gpu_engine/wg"));
+        include_dirs.push(manifest_dir.join("webgpu-headers"));
+    }
     include_dirs
+}
+
+/// Compile ThorVG's WebGPU engine (`renderer/gpu_engine` and
+/// `renderer/gpu_engine/wg`) into objects for the `thorvg` archive.
+///
+/// Apart from the rest because its sources use designated initializers,
+/// which cl accepts only from C++20 (clang and gcc take them in C++14 as
+/// an extension, which is how ThorVG's meson builds them).
+///
+/// It is compiled against the vendored `webgpu-headers/webgpu/webgpu.h`
+/// and calls the `wgpu*` functions without defining them: the final
+/// binary links whichever implementation of that header it uses
+/// (wgpu-native, or wgpu-cabi in a browser).  Each implementation must be
+/// built from the same header, as struct layouts and enum values change
+/// between its revisions.
+fn compile_wg_engine(
+    src: &Path,
+    include_dirs: &[PathBuf],
+    target: &TargetInfo,
+    multilib: &[String],
+) -> Vec<PathBuf> {
+    let mut build = configure_thorvg_build(target, multilib);
+    let msvc_flags = build
+        .try_get_compiler()
+        .map_or(target.is_msvc, |tool| tool.is_like_msvc() && !tool.is_like_clang());
+    if msvc_flags {
+        build.std("c++20");
+    }
+    for dir in include_dirs {
+        build.include(dir);
+    }
+    let mut sources = Vec::new();
+    add_dir_cpp(&mut sources, &src.join("renderer/gpu_engine"));
+    add_dir_cpp(&mut sources, &src.join("renderer/gpu_engine/wg"));
+    build.files(sources);
+    println!("cargo:rerun-if-changed=webgpu-headers");
+    build.compile_intermediates()
 }
 
 // ---------------------------------------------------------------------------
@@ -1051,6 +1103,9 @@ fn write_config_h(out_dir: &Path, target: &TargetInfo) {
     }
     if target.has_video_backend() {
         config.push_str("#define THORVG_MEDIA_LOADER_SUPPORT 1\n");
+    }
+    if cfg!(feature = "wg") {
+        config.push_str("#define THORVG_WG_ENGINE_SUPPORT 1\n");
     }
 
     std::fs::write(out_dir.join("config.h"), config).expect("failed to write config.h");

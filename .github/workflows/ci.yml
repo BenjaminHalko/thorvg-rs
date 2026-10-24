@@ -63,6 +63,30 @@ jobs:
       - name: Package includes the AVFoundation backend
         run: cargo package -p thorvg-sys --list --allow-dirty | grep -q 'tvgAvfMediaLoader.mm$'
 
+  # The `wg` feature compiles ThorVG's WebGPU engine. It is built, not
+  # linked: the webgpu.h implementation is the final binary's to bring.
+  wg:
+    name: wg (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install libclang (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y llvm-dev libclang-dev clang
+      - name: Point bindgen at libclang (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "LIBCLANG_PATH=C:\Program Files\LLVM\bin" >> $env:GITHUB_ENV
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build -p thorvg-sys --features wg
+
   features:
     name: features (${{ matrix.features }})
     runs-on: ubuntu-latest

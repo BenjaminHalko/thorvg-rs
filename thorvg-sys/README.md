@@ -37,6 +37,7 @@ pkg-config required.
 | `threads` | ✅ | Multi-threaded TaskScheduler (`std::thread`) |
 | `file-io` | ✅ | Filesystem I/O APIs in ThorVG |
 | `video` | | Experimental video playback via ThorVG's AVFoundation backend (macOS / iOS; no-op elsewhere) |
+| `wg` | | ThorVG's WebGPU engine beside the CPU one (`tvg_wgcanvas_*`); see below |
 
 Each loader / capability flag toggles the corresponding source files and `#define` in the generated `config.h`. Disable defaults and pick what you need for embedded use:
 
@@ -44,6 +45,22 @@ Each loader / capability flag toggles the corresponding source files and `#defin
 [dependencies]
 thorvg-sys = { version = "0.4", default-features = false, features = ["vendored", "lottie", "svg"] }
 ```
+
+## The WebGPU engine (`wg`)
+
+`wg` compiles ThorVG's WebGPU engine with the rest, so `tvg_wgcanvas_create`
+gives a canvas that draws through WebGPU (without it, it gives none). The
+engine calls `webgpu.h`'s `wgpu*` functions; thorvg-sys doesn't define them
+or link anything that does. The final binary links one implementation, for
+example the `wgpu-native` crate built from source on the desktop, or
+[wgpu-cabi](https://github.com/LottieFiles/wgpu-cabi) (which runs on
+wgpu-native there, and on the browser's WebGPU on `wasm32`).
+
+The engine is compiled against `webgpu-headers/webgpu/webgpu.h`, the
+[webgpu-headers](https://github.com/webgpu-native/webgpu-headers) at
+`673658bc`: the one wgpu-native v29.0.1.1 is built from, and wgpu-cabi's
+copy, as ThorVG 1.1 expects. The implementation linked must be built from
+the same header: its structs and enums change between revisions.
 
 ## Cross-compilation
 
