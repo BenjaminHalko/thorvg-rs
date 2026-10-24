@@ -1023,7 +1023,7 @@ fn write_config_h(out_dir: &Path, target: &TargetInfo) {
          #pragma once\n\n\
          #define THORVG_CAPI_BINDING_SUPPORT 1\n\
          #define THORVG_CPU_ENGINE_SUPPORT 1\n\
-         #define THORVG_VERSION_STRING \"1.1.2\"\n",
+         #define THORVG_VERSION_STRING \"1.1.3\"\n",
     );
 
     if cfg!(feature = "lottie") {

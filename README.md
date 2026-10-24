@@ -181,10 +181,11 @@ No meson, ninja, or pkg-config required for vendored builds.
 
 ### The ThorVG this branch builds
 
-This branch (`creator-tui`) points `thorvg-sys/thorvg` at the `creator-tui` branch of
-[BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is the line
-pinned before it, `fix/exit-globals` (the upstream v1.1 release line with the bare-metal series,
-and ThorVG's globals kept alive past exit), plus Lottie text fixes cherry-picked with `-x`:
+This branch (`creator-tui-1.1.3`) points `thorvg-sys/thorvg` at the `creator-tui-1.1.3` branch
+of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is
+`fix/exit-globals-1.1.3` (upstream ThorVG v1.1.3 with the bare-metal series, and ThorVG's globals
+kept alive past exit), plus Lottie text fixes cherry-picked onto it. (`creator-tui` is the same
+on ThorVG v1.1.2.)
 
 | Fix branch (one commit on upstream main) | What it fixes |
 |---|---|
