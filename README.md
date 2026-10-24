@@ -181,11 +181,12 @@ No meson, ninja, or pkg-config required for vendored builds.
 
 ### The ThorVG this branch builds
 
-This branch (`creator-tui-1.1.3`) points `thorvg-sys/thorvg` at the `creator-tui-1.1.3` branch
-of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is
-`fix/exit-globals-1.1.3` (upstream ThorVG v1.1.3 with the bare-metal series, and ThorVG's globals
-kept alive past exit), plus Lottie text fixes cherry-picked onto it. (`creator-tui` is the same
-on ThorVG v1.1.2.)
+This branch (`creator-tui-1.1.3-conic`) points `thorvg-sys/thorvg` at the
+`creator-tui-1.1.3-conic` branch of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg).
+That branch is `fix/exit-globals-1.1.3` (upstream ThorVG v1.1.3 with the bare-metal series, and
+ThorVG's globals kept alive past exit), plus Lottie text fixes and the conic gradient below
+cherry-picked onto it. (`creator-tui-1.1.3` is the same without the conic gradient, and
+`creator-tui` the fixes on ThorVG v1.1.2.)
 
 | Fix branch (one commit on upstream main) | What it fixes |
 |---|---|
@@ -195,6 +196,7 @@ on ThorVG v1.1.2.)
 | `fix/text-range-basis-percent` | a range in percent counts the units of its basis (words, lines, characters without spaces) |
 | `fix/text-range-utf8` | text ranges count letters, not UTF-8 bytes |
 | `fix/text-search-glyph-scope` | a lower case letter in all capitals or small capitals is looked up as its capital through a buffer still in scope, not a stack slot gone by then |
+| `feat/lottie-conic-gradient` | a Lottie gradient of type 3 (not in the spec) is drawn as a conic gradient around its start, from its end's direction |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is

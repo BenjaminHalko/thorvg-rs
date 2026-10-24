@@ -3,10 +3,10 @@
 	# Fork of thorvg/thorvg carrying the bare-metal patch series on top of
 	# the upstream release tag, plus a fix keeping ThorVG's static mutexes
 	# and globals alive past exit and a few Lottie text fixes (its
-	# creator-tui-1.1.3 branch, on ThorVG v1.1.3, see the README); the
+	# creator-tui-1.1.3-conic branch, on ThorVG v1.1.3, see the README); the
 	# pinned commit lives only on the fork.
 	url = https://github.com/BenjaminHalko/thorvg.git
-	branch = creator-tui-1.1.3
+	branch = creator-tui-1.1.3-conic
 [submodule "thorvg-sys/picolibc"]
 	path = thorvg-sys/picolibc
 	url = https://github.com/picolibc/picolibc.git
