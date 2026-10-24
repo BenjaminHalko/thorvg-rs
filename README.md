@@ -179,6 +179,26 @@ cargo build
 
 No meson, ninja, or pkg-config required for vendored builds.
 
+### The ThorVG this branch builds
+
+This branch (`creator-tui`) points `thorvg-sys/thorvg` at the `creator-tui` branch of
+[BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is the line
+pinned before it, `fix/exit-globals` (the upstream v1.1 release line with the bare-metal series,
+and ThorVG's globals kept alive past exit), plus Lottie text fixes cherry-picked with `-x`:
+
+| Fix branch (one commit on upstream main) | What it fixes |
+|---|---|
+| `fix/text-anchor-init` | a text layer's alignment anchor is (0, 0) when the file has none, not uninitialized |
+| `fix/text-range-ease-low` | a text range with an ease low and no ease high no longer crashes |
+| `fix/text-range-random-whole` | a randomized text range as wide as the text no longer divides by zero |
+| `fix/text-range-basis-percent` | a range in percent counts the units of its basis (words, lines, characters without spaces) |
+| `fix/text-range-utf8` | text ranges count letters, not UTF-8 bytes |
+
+The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
+upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
+rebuilt when a fix changes, and how the two fixes that touch the same lines (basis and UTF-8,
+in `RenderText`) are joined there.
+
 ## Development
 
 Requires [just](https://github.com/casey/just) for task running:
