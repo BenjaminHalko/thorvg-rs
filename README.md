@@ -201,7 +201,7 @@ one.)
 | `feat/lottie-conic-gradient` | a Lottie gradient of type 3 (not in the spec) is drawn as a conic gradient around its start, from its end's direction |
 | (a5acae45, no fix branch yet) | every WebGPU scissor rect is clamped to the render target, which wgpu-native aborts on otherwise |
 | `fix/gaussian-row-int` | the scalar gaussian blur row's bounds are `int`, so `clamp()` finds one type for them where `int32_t` is `long` (riscv32) |
-| `fix/lottie-per-dimension-easing` | a keyframe whose handles have a value for each dimension (as After Effects writes them) eases a point's y by its own, not by x's |
+| `fix/lottie-per-dimension-easing` | a keyframe whose handles have a value for each dimension (as After Effects writes them) eases a point's y by its own, not by x's; a move whose spatial tangents are both zero is straight |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
