@@ -418,6 +418,9 @@ pub enum PaintType {
     LinearGradient,
     /// A [`RadialGradient`](crate::RadialGradient).
     RadialGradient,
+    /// A conic gradient (`ThorVG` 1.1's; this crate has no wrapper for
+    /// it yet).
+    ConicGradient,
 }
 
 impl PaintType {
@@ -429,6 +432,7 @@ impl PaintType {
             sys::Tvg_Type::TVG_TYPE_TEXT => Self::Text,
             sys::Tvg_Type::TVG_TYPE_LINEAR_GRAD => Self::LinearGradient,
             sys::Tvg_Type::TVG_TYPE_RADIAL_GRAD => Self::RadialGradient,
+            sys::Tvg_Type::TVG_TYPE_CONIC_GRAD => Self::ConicGradient,
             sys::Tvg_Type::TVG_TYPE_UNDEF => Self::Undefined,
         }
     }

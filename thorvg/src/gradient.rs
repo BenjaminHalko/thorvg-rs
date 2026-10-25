@@ -502,9 +502,10 @@ impl core::fmt::Debug for BorrowedRadialGradient<'_> {
 /// type-checked at compile time (no "linear method called on a
 /// radial gradient" runtime errors).
 ///
-/// Exhaustive: the C "gradient kind" set has only two members
-/// (`TVG_TYPE_LINEAR_GRAD`, `TVG_TYPE_RADIAL_GRAD`) and is closed
-/// in the same sense as [`BlurDirection`](crate::BlurDirection).
+/// Exhaustive: linear and radial are the gradients viewed here (a
+/// conic one, `TVG_TYPE_CONIC_GRAD`, is refused with
+/// [`Error::NotSupported`]), closed in the same sense as
+/// [`BlurDirection`](crate::BlurDirection).
 #[derive(Debug)]
 pub enum BorrowedGradient<'a> {
     /// Linear gradient view.
@@ -528,8 +529,10 @@ impl BorrowedGradient<'_> {
             PaintType::RadialGradient => {
                 Self::Radial(unsafe { BorrowedRadialGradient::from_raw(raw) })
             }
-            // `tvg_gradient_get_type` only ever reports linear or
-            // radial on a valid gradient handle; any other answer
+            // A conic gradient (`ThorVG` 1.1's) has no view here yet.
+            PaintType::ConicGradient => return Err(Error::NotSupported),
+            // `tvg_gradient_get_type` only ever reports a gradient
+            // type on a valid gradient handle; any other answer
             // means the C engine returned junk and we cannot trust
             // further reads.
             _ => return Err(Error::Unknown),
