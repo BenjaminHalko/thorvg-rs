@@ -205,6 +205,12 @@ upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how 
 rebuilt when a fix changes, and how the two fixes that touch the same lines (basis and UTF-8,
 in `RenderText`) are joined there.
 
+On this branch the vendored build also turns on ThorVG's SIMD code as its meson `simd` option
+(on by default) does: `THORVG_NEON_SUPPORT` on aarch64, and `THORVG_AVX_SUPPORT` on x86-64 with
+`tvgSwRasterSimd.cpp` alone compiled for AVX2 (`-mavx2`, `/arch:AVX2` or `/clang:-mavx2`).
+ThorVG checks the processor before it calls any of it, and draws without it where it's missing.
+Bare-metal targets and other arches are built as before.
+
 ## Development
 
 Requires [just](https://github.com/casey/just) for task running:

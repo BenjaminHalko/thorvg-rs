@@ -56,8 +56,22 @@ fn build_vendored_cc(thorvg_src: &Path, manifest_dir: &Path, out_dir: &Path) {
     for dir in &include_dirs {
         build.include(dir);
     }
+    // The SIMD file alone gets the SIMD flags (as meson builds it, into its own library): the
+    // rest stays runnable on a processor without them, which `rasterInit` checks for first.
+    let simd_file = src.join("renderer/cpu_engine/tvgSwRasterSimd.cpp");
+    if simd_define(&target).is_some() {
+        let mut simd = build.clone();
+        for f in simd_flags(&target, &build) {
+            simd.flag(f);
+        }
+        for obj in simd.file(&simd_file).compile_intermediates() {
+            build.object(obj);
+        }
+    }
     for src_file in &sources {
-        build.file(src_file);
+        if simd_define(&target).is_none() || *src_file != simd_file {
+            build.file(src_file);
+        }
     }
     build.compile("thorvg");
 
@@ -1016,6 +1030,35 @@ fn cross_runtime_libs(wanted: &[&str], extra_args: &[String]) -> Vec<(PathBuf, S
     out
 }
 
+/// The SIMD ThorVG's CPU engine draws with, as meson's `simd` option (on by default) picks it:
+/// AVX2 on x86-64, NEON on aarch64. Its `config.h` define, or None (other arches, and bare metal,
+/// left as they were). ThorVG asks the processor before it calls any of it (`rasterInit`).
+fn simd_define(target: &TargetInfo) -> Option<&'static str> {
+    if target.is_bare_metal {
+        return None;
+    }
+    match target.arch.as_str() {
+        "x86_64" => Some("THORVG_AVX_SUPPORT"),
+        "aarch64" => Some("THORVG_NEON_SUPPORT"),
+        _ => None,
+    }
+}
+
+/// The flags `tvgSwRasterSimd.cpp` is compiled with, as meson's `cpu_engine/meson.build` gives
+/// them: AVX2 in each compiler's dialect on x86-64; none on aarch64, where NEON is always there.
+fn simd_flags(target: &TargetInfo, build: &cc::Build) -> Vec<&'static str> {
+    if target.arch != "x86_64" {
+        return Vec::new();
+    }
+    match build.try_get_compiler() {
+        Ok(tool) if tool.is_like_clang_cl() => vec!["/clang:-mavx2"],
+        Ok(tool) if tool.is_like_msvc() => vec!["/arch:AVX2"],
+        Ok(_) => vec!["-mavx2"],
+        Err(_) if target.is_msvc => vec!["/arch:AVX2"],
+        Err(_) => vec!["-mavx2"],
+    }
+}
+
 /// Write `config.h` based on enabled cargo features.
 fn write_config_h(out_dir: &Path, target: &TargetInfo) {
     let mut config = String::from(
@@ -1051,6 +1094,9 @@ fn write_config_h(out_dir: &Path, target: &TargetInfo) {
     }
     if target.has_video_backend() {
         config.push_str("#define THORVG_MEDIA_LOADER_SUPPORT 1\n");
+    }
+    if let Some(simd) = simd_define(target) {
+        config.push_str(&format!("#define {simd} 1\n"));
     }
 
     std::fs::write(out_dir.join("config.h"), config).expect("failed to write config.h");
