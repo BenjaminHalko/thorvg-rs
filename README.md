@@ -184,8 +184,10 @@ No meson, ninja, or pkg-config required for vendored builds.
 This branch (`creator-tui-1.1.3`) points `thorvg-sys/thorvg` at the `creator-tui-1.1.3` branch
 of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is
 `fix/exit-globals-1.1.3` (upstream ThorVG v1.1.3 with the bare-metal series, and ThorVG's globals
-kept alive past exit), plus Lottie text fixes cherry-picked onto it. (`creator-tui` is the same
-on ThorVG v1.1.2.)
+kept alive past exit), plus Lottie text fixes, the WebGPU scissor clamp and a conic gradient for
+Lottie cherry-picked onto it. (`creator-tui` is the same fixes on ThorVG v1.1.2; the
+`creator-tui-1.1.3-conic` branch here, and `creator-tui-1.1.3-wg` there, are folded into this
+one.)
 
 | Fix branch (one commit on upstream main) | What it fixes |
 |---|---|
@@ -195,6 +197,8 @@ on ThorVG v1.1.2.)
 | `fix/text-range-basis-percent` | a range in percent counts the units of its basis (words, lines, characters without spaces) |
 | `fix/text-range-utf8` | text ranges count letters, not UTF-8 bytes |
 | `fix/text-search-glyph-scope` | a lower case letter in all capitals or small capitals is looked up as its capital through a buffer still in scope, not a stack slot gone by then |
+| `feat/lottie-conic-gradient` | a Lottie gradient of type 3 (not in the spec) is drawn as a conic gradient around its start, from its end's direction |
+| (a5acae45, no fix branch yet) | every WebGPU scissor rect is clamped to the render target, which wgpu-native aborts on otherwise |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
