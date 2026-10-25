@@ -197,6 +197,7 @@ one.)
 | `fix/text-range-basis-percent` | a range in percent counts the units of its basis (words, lines, characters without spaces) |
 | `fix/text-range-utf8` | text ranges count letters, not UTF-8 bytes |
 | `fix/text-search-glyph-scope` | a lower case letter in all capitals or small capitals is looked up as its capital through a buffer still in scope, not a stack slot gone by then |
+| `fix/neon-alpha-blend` | the NEON `ALPHA_BLEND` rounds as the scalar one does, so NEON draws the same pixels as without it |
 | `feat/lottie-conic-gradient` | a Lottie gradient of type 3 (not in the spec) is drawn as a conic gradient around its start, from its end's direction |
 | (a5acae45, no fix branch yet) | every WebGPU scissor rect is clamped to the render target, which wgpu-native aborts on otherwise |
 
