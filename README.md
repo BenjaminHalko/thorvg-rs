@@ -200,6 +200,7 @@ one.)
 | `fix/neon-alpha-blend` | the NEON `ALPHA_BLEND` rounds as the scalar one does, so NEON draws the same pixels as without it |
 | `feat/lottie-conic-gradient` | a Lottie gradient of type 3 (not in the spec) is drawn as a conic gradient around its start, from its end's direction |
 | (a5acae45, no fix branch yet) | every WebGPU scissor rect is clamped to the render target, which wgpu-native aborts on otherwise |
+| `fix/gaussian-row-int` | the scalar gaussian blur row's bounds are `int`, so `clamp()` finds one type for them where `int32_t` is `long` (riscv32) |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
