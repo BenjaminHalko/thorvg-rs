@@ -181,6 +181,10 @@ No meson, ninja, or pkg-config required for vendored builds.
 
 ### The ThorVG this branch builds
 
+Creator TUI builds its own checkout of the same ThorVG fork (its `vendor/thorvg` submodule,
+through `THORVG_SRC`), so the submodule here is what a build without it gets (`cargo install`,
+which reads no project's `.cargo/config.toml`).
+
 This branch (`creator-tui-1.1.3`) points `thorvg-sys/thorvg` at the `creator-tui-1.1.3` branch
 of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is
 upstream ThorVG v1.1.3 with the bare-metal series, plus Lottie text fixes, the WebGPU scissor clamp and a conic gradient for
