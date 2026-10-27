@@ -183,11 +183,12 @@ No meson, ninja, or pkg-config required for vendored builds.
 
 This branch (`creator-tui-1.1.3`) points `thorvg-sys/thorvg` at the `creator-tui-1.1.3` branch
 of [BenjaminHalko/thorvg](https://github.com/BenjaminHalko/thorvg). That branch is
-`fix/exit-globals-1.1.3` (upstream ThorVG v1.1.3 with the bare-metal series, and ThorVG's globals
-kept alive past exit), plus Lottie text fixes, the WebGPU scissor clamp and a conic gradient for
+upstream ThorVG v1.1.3 with the bare-metal series, plus Lottie text fixes, the WebGPU scissor clamp and a conic gradient for
 Lottie cherry-picked onto it. (`creator-tui` is the same fixes on ThorVG v1.1.2; the
 `creator-tui-1.1.3-conic` branch here, and `creator-tui-1.1.3-wg` there, are folded into this
-one.)
+one.) It carries only changes upstream would take; the fixes that kept ThorVG's globals alive
+past exit are reverted there (upstream pairs `Initializer::term()` with `init()` instead,
+thorvg/thorvg#4951).
 
 | Fix branch (one commit on upstream main) | What it fixes |
 |---|---|

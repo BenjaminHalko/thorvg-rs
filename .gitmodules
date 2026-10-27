@@ -1,8 +1,7 @@
 [submodule "thorvg-sys/thorvg"]
 	path = thorvg-sys/thorvg
 	# Fork of thorvg/thorvg carrying the bare-metal patch series on top of
-	# the upstream release tag, plus a fix keeping ThorVG's static mutexes
-	# and globals alive past exit and a few Lottie text fixes (its
+	# the upstream release tag, plus fixes sent upstream (its
 	# creator-tui-1.1.3 branch, on ThorVG v1.1.3, see the README); the
 	# pinned commit lives only on the fork.
 	url = https://github.com/BenjaminHalko/thorvg.git
