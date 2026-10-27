@@ -202,6 +202,7 @@ one.)
 | (a5acae45, no fix branch yet) | every WebGPU scissor rect is clamped to the render target, which wgpu-native aborts on otherwise |
 | `fix/gaussian-row-int` | the scalar gaussian blur row's bounds are `int`, so `clamp()` finds one type for them where `int32_t` is `long` (riscv32) |
 | `fix/lottie-per-dimension-easing` | a keyframe whose handles have a value for each dimension (as After Effects writes them) eases a point's y by its own, not by x's; a move whose spatial tangents are both zero is straight |
+| (bd5734b4, on the fork's main from #3) | a JerryScript context found again by a reused thread id is bound before use, and a document with expressions is parsed, built and updated on the calling thread, so expressions don't crash when they run on more than one thread |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
