@@ -209,6 +209,7 @@ thorvg/thorvg#4951).
 | `fix/lottie-per-dimension-easing` | a keyframe whose handles have a value for each dimension (as After Effects writes them) eases a point's y by its own, not by x's; a move whose spatial tangents are both zero is straight |
 | (bd5734b4, on the fork's main from #3) | a JerryScript context found again by a reused thread id is bound before use, and a document with expressions is parsed, built and updated on the calling thread, so expressions don't crash when they run on more than one thread |
 | `fix/scheduler-worker-requests` (a3b9fc8e, on the fork from #5, with its test 66f6054e) | a worker runs a task it asks for itself, so it never waits for one queued behind it: a Lottie whose image is decoded while its loader runs on a worker no longer hangs, as it did with one worker thread |
+| `fix/lottie-motion-path-length` (backported as a4a2e32f) | a point keyed along a curve (spatial tangents) moves along it by its length measured exactly, not by the alpha-max-plus-beta-min estimate that ran it up to 7% ahead or behind by direction; setting a frame with many such keys takes about half the time |
 
 The fix branches are each based on upstream `thorvg/thorvg` main, so each can be proposed
 upstream on its own. `CREATOR-TUI.md` on the ThorVG branch covers the rest: how the branch is
